@@ -22,8 +22,6 @@
             width: 100vw;
             height: 100vh;
         }
-
-        /* HUD overlay */
         #hud {
             position: absolute;
             top: 20px;
@@ -55,7 +53,6 @@
             border: 1px solid rgba(255, 200, 0, 0.3);
             color: #f5a623;
         }
-
         #controls-hint {
             position: absolute;
             bottom: 30px;
@@ -67,7 +64,6 @@
             pointer-events: none;
             z-index: 10;
             text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
-            letter-spacing: 1px;
         }
         #controls-hint kbd {
             background: rgba(0, 0, 0, 0.4);
@@ -76,7 +72,6 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             margin: 0 4px;
         }
-
         #restartBtn {
             position: absolute;
             bottom: 80px;
@@ -99,7 +94,6 @@
         #restartBtn:hover {
             transform: translateX(-50%) scale(1.05);
         }
-
         @media (max-width: 600px) {
             #hud {
                 font-size: 14px;
@@ -120,17 +114,15 @@
 </head>
 <body>
 
-    <!-- HUD -->
     <div id="hud">
         <div id="score">🏁 0 m</div>
         <div id="nitroDisplay">💨 NITRO</div>
     </div>
     <div id="controls-hint">
-        <kbd>←</kbd> <kbd>→</kbd> Steer &nbsp;·&nbsp; <kbd>↑</kbd> Accelerate &nbsp;·&nbsp; <kbd>↓</kbd> Brake &nbsp;·&nbsp; <kbd>Space</kbd> Nitro
+        <kbd>←</kbd> <kbd>→</kbd> Steer &nbsp;·&nbsp; <kbd>↑</kbd> Speed Up &nbsp;·&nbsp; <kbd>↓</kbd> Slow Down &nbsp;·&nbsp; <kbd>Space</kbd> Nitro
     </div>
     <button id="restartBtn">🔄 New Game</button>
 
-    <!-- Three.js from CDN -->
     <script type="importmap">
         {
             "imports": {
@@ -140,35 +132,25 @@
     </script>
 
     <script type="module">
-        // ============================================================
-        // IMPORTS
-        // ============================================================
         import * as THREE from 'three';
-        import { OrbitControls } from 'https://unpkg.com/three@0.126.0/examples/jsm/controls/OrbitControls.js';
 
-        // ============================================================
-        // DOM REFS
-        // ============================================================
+        // ----- DOM refs -----
         const scoreDisplay = document.getElementById('score');
         const nitroDisplay = document.getElementById('nitroDisplay');
         const restartBtn = document.getElementById('restartBtn');
 
-        // ============================================================
-        // AUDIO ENGINE (Web Audio – synthesized)
-        // ============================================================
+        // ----- Audio Engine (Web Audio) -----
         let audioCtx = null;
 
         function initAudio() {
             if (!audioCtx) {
                 audioCtx = new(window.AudioContext || window.webkitAudioContext)();
             }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+            if (audioCtx.state === 'suspended') audioCtx.resume();
         }
 
-        let engineOsc = null;
-        let engineGain = null;
+        let engineOsc = null,
+            engineGain = null;
 
         function startEngine() {
             if (engineOsc) return;
@@ -233,9 +215,7 @@
             noise.stop(audioCtx.currentTime + 0.3);
         }
 
-        // ============================================================
-        // THREE.JS SCENE SETUP
-        // ============================================================
+        // ----- Scene Setup -----
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x1a2639);
         scene.fog = new THREE.Fog(0x1a2639, 30, 80);
@@ -251,12 +231,9 @@
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         document.body.prepend(renderer.domElement);
 
-        // ============================================================
-        // LIGHTING
-        // ============================================================
-        const ambientLight = new THREE.AmbientLight(0x404060, 0.5);
-        scene.add(ambientLight);
-
+        // ----- Lighting -----
+        const ambient = new THREE.AmbientLight(0x404060, 0.5);
+        scene.add(ambient);
         const dirLight = new THREE.DirectionalLight(0xffeedd, 1.2);
         dirLight.position.set(10, 20, 10);
         dirLight.castShadow = true;
@@ -270,28 +247,25 @@
         dirLight.shadow.camera.near = 1;
         dirLight.shadow.camera.far = 50;
         scene.add(dirLight);
+        const fill = new THREE.DirectionalLight(0x4488ff, 0.3);
+        fill.position.set(-10, 5, 10);
+        scene.add(fill);
 
-        const fillLight = new THREE.DirectionalLight(0x4488ff, 0.3);
-        fillLight.position.set(-10, 5, 10);
-        scene.add(fillLight);
-
-        // ============================================================
-        // ROAD
-        // ============================================================
+        // ----- Road Group (everything scrolls) -----
         const roadGroup = new THREE.Group();
         scene.add(roadGroup);
 
-        // Road surface
         const roadLength = 200;
         const roadWidth = 8;
-        const roadGeo = new THREE.BoxGeometry(roadWidth, 0.1, roadLength);
+
+        // Road surface
         const roadMat = new THREE.MeshStandardMaterial({ color: 0x2a3344, roughness: 0.8, metalness: 0.1 });
-        const road = new THREE.Mesh(roadGeo, roadMat);
+        const road = new THREE.Mesh(new THREE.BoxGeometry(roadWidth, 0.1, roadLength), roadMat);
         road.position.y = -0.05;
         road.receiveShadow = true;
         roadGroup.add(road);
 
-        // Lane markings (dashed lines)
+        // Lane markings
         const markMat = new THREE.MeshStandardMaterial({ color: 0xf0f6fc, emissive: 0x8899aa, emissiveIntensity: 0.2 });
         for (let z = -roadLength / 2; z < roadLength / 2; z += 3) {
             const mark = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.02, 1.5), markMat);
@@ -299,7 +273,7 @@
             roadGroup.add(mark);
         }
 
-        // Road edges (white lines)
+        // Road edges
         const edgeMat = new THREE.MeshStandardMaterial({ color: 0xf0f6fc, emissive: 0x8899aa, emissiveIntensity: 0.1 });
         for (let side = -1; side <= 1; side += 2) {
             const edge = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.02, roadLength), edgeMat);
@@ -307,7 +281,7 @@
             roadGroup.add(edge);
         }
 
-        // Side objects (trees / buildings – just colored boxes)
+        // Side objects (trees/buildings)
         const colors = [0x3fb950, 0x58a6ff, 0xf0883e, 0x8b949e];
         for (let z = -roadLength / 2; z < roadLength / 2; z += 3) {
             if (Math.random() > 0.7) continue;
@@ -316,7 +290,7 @@
             const d = 0.5 + Math.random() * 0.5;
             const objMat = new THREE.MeshStandardMaterial({
                 color: colors[Math.floor(Math.random() * colors.length)],
-                roughness: 0.7,
+                roughness: 0.7
             });
             const obj = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), objMat);
             const side = Math.random() > 0.5 ? 1 : -1;
@@ -327,27 +301,22 @@
             roadGroup.add(obj);
         }
 
-        // ============================================================
-        // PLAYER CAR
-        // ============================================================
+        // ----- Player Car (stays at origin) -----
         const carGroup = new THREE.Group();
         scene.add(carGroup);
 
-        // Car body
         const bodyMat = new THREE.MeshStandardMaterial({ color: 0x3fb950, roughness: 0.3, metalness: 0.6 });
         const body = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.3, 1.8), bodyMat);
         body.position.y = 0.3;
         body.castShadow = true;
         carGroup.add(body);
 
-        // Cabin
         const cabinMat = new THREE.MeshStandardMaterial({ color: 0x1a2a3a, roughness: 0.4, metalness: 0.1 });
         const cabin = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.25, 0.9), cabinMat);
         cabin.position.set(0, 0.55, -0.1);
         cabin.castShadow = true;
         carGroup.add(cabin);
 
-        // Headlights
         const hlMat = new THREE.MeshStandardMaterial({ color: 0xffdd44, emissive: 0xffaa00, emissiveIntensity: 0.5 });
         const hl1 = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), hlMat);
         hl1.position.set(-0.3, 0.25, 0.95);
@@ -356,7 +325,6 @@
         hl2.position.set(0.3, 0.25, 0.95);
         carGroup.add(hl2);
 
-        // Taillights
         const tlMat = new THREE.MeshStandardMaterial({ color: 0xff3333, emissive: 0xff0000, emissiveIntensity: 0.3 });
         const tl1 = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), tlMat);
         tl1.position.set(-0.3, 0.25, -0.95);
@@ -365,19 +333,16 @@
         tl2.position.set(0.3, 0.25, -0.95);
         carGroup.add(tl2);
 
-        // Car shadow (for ground)
+        // Car shadow
         const shadowMat = new THREE.ShadowMaterial({ opacity: 0.3 });
         const shadowPlane = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.8), shadowMat);
         shadowPlane.rotation.x = -Math.PI / 2;
         shadowPlane.position.y = 0.01;
         carGroup.add(shadowPlane);
 
-        // Initial position
-        carGroup.position.set(0, 0, 5);
+        carGroup.position.set(0, 0, 0);
 
-        // ============================================================
-        // ENEMY CARS
-        // ============================================================
+        // ----- Enemy Cars (children of roadGroup) -----
         const enemies = [];
         const enemyColors = [0xe34b4b, 0x4b7ae8, 0xe8a84b, 0x9b4be8];
 
@@ -385,21 +350,18 @@
             const color = enemyColors[Math.floor(Math.random() * enemyColors.length)];
             const group = new THREE.Group();
 
-            // Body
-            const mat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.4, metalness: 0.3 });
+            const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.4, metalness: 0.3 });
             const bodyMesh = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.28, 1.6), mat);
             bodyMesh.position.y = 0.28;
             bodyMesh.castShadow = true;
             group.add(bodyMesh);
 
-            // Cabin
             const cabinEnemy = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.2, 0.8),
                 new THREE.MeshStandardMaterial({ color: 0x1a2a3a }));
             cabinEnemy.position.set(0, 0.5, -0.1);
             cabinEnemy.castShadow = true;
             group.add(cabinEnemy);
 
-            // Headlights (enemy)
             const hlE = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 6),
                 new THREE.MeshStandardMaterial({ color: 0xffdd44, emissive: 0xffaa00, emissiveIntensity: 0.3 }));
             hlE.position.set(-0.25, 0.2, 0.85);
@@ -409,12 +371,12 @@
             hlE2.position.set(0.25, 0.2, 0.85);
             group.add(hlE2);
 
-            // Random x position within road
+            // Position within road, at the far end
             const x = (Math.random() - 0.5) * (roadWidth - 1.2);
             group.position.set(x, 0, -roadLength / 2 - 2);
-            scene.add(group);
+            roadGroup.add(group);
 
-            const speed = 2 + Math.random() * 3 + getSpeed() * 0.3;
+            const speed = 1.5 + Math.random() * 2 + getSpeed() * 0.2;
             enemies.push({
                 mesh: group,
                 speed: speed,
@@ -423,24 +385,21 @@
             });
         }
 
-        // ============================================================
-        // GAME STATE
-        // ============================================================
+        // ----- Game State -----
         let gameRunning = true;
         let score = 0;
-        let speed = 3;
-        const maxSpeed = 12;
+        let speed = 4; // base speed
+        const maxSpeed = 14;
         let nitro = 100;
         let nitroActive = false;
         let frame = 0;
         let spawnCounter = 0;
-        const spawnInterval = 40;
+        const spawnInterval = 35;
 
-        // Player movement
-        let moveLeft = false;
-        let moveRight = false;
-        let accelerate = false;
-        let brake = false;
+        let moveLeft = false,
+            moveRight = false;
+        let speedUp = false,
+            slowDown = false;
         let nitroKey = false;
 
         function getSpeed() {
@@ -449,17 +408,11 @@
             return Math.min(s, maxSpeed);
         }
 
-        // ============================================================
-        // COLLISION DETECTION (AABB)
-        // ============================================================
+        // ----- Collision (world space) -----
         function getCarBox(group) {
-            const pos = group.position;
-            return {
-                x: pos.x,
-                z: pos.z,
-                w: 0.9,
-                d: 1.8,
-            };
+            const pos = new THREE.Vector3();
+            group.getWorldPosition(pos);
+            return { x: pos.x, z: pos.z, w: 0.9, d: 1.8 };
         }
 
         function boxesCollide(a, b) {
@@ -467,41 +420,34 @@
                 Math.abs(a.z - b.z) < (a.d / 2 + b.d / 2);
         }
 
-        // ============================================================
-        // RESET GAME
-        // ============================================================
+        // ----- Reset -----
         function resetGame() {
-            // Remove enemies
             for (const e of enemies) {
-                scene.remove(e.mesh);
+                roadGroup.remove(e.mesh);
             }
             enemies.length = 0;
             gameRunning = true;
             score = 0;
-            speed = 3;
+            speed = 4;
             nitro = 100;
             nitroActive = false;
             frame = 0;
             spawnCounter = 0;
-            carGroup.position.set(0, 0, 5);
+            carGroup.position.set(0, 0, 0);
             carGroup.rotation.y = 0;
+            roadGroup.position.set(0, 0, 0);
             scoreDisplay.textContent = '🏁 0 m';
             nitroDisplay.textContent = '💨 NITRO';
             nitroDisplay.style.color = '#f5a623';
             restartBtn.style.display = 'none';
-            // Restart engine
             if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
             startEngine();
         }
 
-        // ============================================================
-        // GAME LOOP
-        // ============================================================
+        // ----- Update -----
         function update() {
             if (!gameRunning) {
-                if (engineGain) {
-                    engineGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.05);
-                }
+                if (engineGain) engineGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.05);
                 return;
             }
 
@@ -509,7 +455,6 @@
             score += 0.1 * (1 + (nitroActive ? 0.6 : 0));
             scoreDisplay.textContent = `🏁 ${Math.floor(score)} m`;
 
-            // Engine sound
             const speedFactor = Math.min(currentSpeed / maxSpeed, 1);
             updateEngine(speedFactor);
 
@@ -537,55 +482,43 @@
                 }
             }
 
-            // Player steering
+            // Steering
             const steerSpeed = 0.08;
             let targetRot = 0;
             if (moveLeft) targetRot = 0.4;
             if (moveRight) targetRot = -0.4;
             carGroup.rotation.y += (targetRot - carGroup.rotation.y) * 0.1;
 
-            // Move forward/backward
-            const forward = accelerate ? 1 : (brake ? -0.5 : 0);
-            const moveZ = forward * currentSpeed * 0.08;
-            carGroup.position.z += moveZ;
+            // Speed control (modify base speed)
+            if (speedUp) speed = Math.min(speed + 0.1, maxSpeed);
+            if (slowDown) speed = Math.max(speed - 0.1, 2);
 
-            // Lateral movement based on rotation
+            // Move world backward (simulate car moving forward)
+            const moveZ = currentSpeed * 0.08;
+            roadGroup.position.z -= moveZ;
+
+            // Lateral movement – move car sideways
             const lateral = Math.sin(carGroup.rotation.y) * currentSpeed * 0.06;
             carGroup.position.x += lateral;
-
-            // Clamp lateral position to road
+            // Clamp to road
             const halfRoad = roadWidth / 2 - 0.5;
             if (carGroup.position.x > halfRoad) carGroup.position.x = halfRoad;
             if (carGroup.position.x < -halfRoad) carGroup.position.x = -halfRoad;
-
-            // Keep car on road (z bounds)
-            if (carGroup.position.z > 10) carGroup.position.z = 10;
-            if (carGroup.position.z < -roadLength / 2 + 2) {
-                // Game over if you fall off the back? Actually we keep moving forward, we'll scroll road later.
-                // For simplicity, we'll just wrap the road. We'll move road group instead.
-            }
-
-            // Move road and enemies relative to player
-            // Instead of moving road, we move everything else
-            // We'll shift the road group forward so player stays near origin
-            // Actually we'll move everything in the z direction relative to player.
-            // Simpler: move all enemies and road objects toward player.
-            // We'll just move enemies; road is fixed and we'll reposition player z.
 
             // Spawn enemies
             spawnCounter++;
             const spawnRate = Math.max(15, spawnInterval - Math.floor(score / 30));
             if (spawnCounter >= spawnRate) {
                 spawnCounter = 0;
-                if (enemies.length < 15) spawnEnemy();
+                if (enemies.length < 20) spawnEnemy();
             }
 
-            // Move enemies toward player
+            // Move enemies forward relative to roadGroup (they are children)
             for (let i = enemies.length - 1; i >= 0; i--) {
                 const e = enemies[i];
                 e.mesh.position.z += e.speed * 0.08;
 
-                // Collision with player
+                // Collision (get world positions)
                 const playerBox = getCarBox(carGroup);
                 const enemyBox = getCarBox(e.mesh);
                 if (boxesCollide(playerBox, enemyBox)) {
@@ -596,35 +529,34 @@
                     return;
                 }
 
-                // Remove if passed player
-                if (e.mesh.position.z > 12) {
-                    scene.remove(e.mesh);
+                // Remove if passed player (in front)
+                if (e.mesh.position.z > roadLength / 2 + 2) {
+                    roadGroup.remove(e.mesh);
                     enemies.splice(i, 1);
                 }
             }
 
-            // Camera follow
-            const targetCamZ = carGroup.position.z - 6;
-            camera.position.z += (targetCamZ - camera.position.z) * 0.05;
-            camera.position.x += (carGroup.position.x * 0.3 - camera.position.x) * 0.05;
-            camera.lookAt(carGroup.position.x * 0.3, 0, carGroup.position.z - 2);
+            // Wrap roadGroup when it moves too far
+            if (roadGroup.position.z < -roadLength) {
+                roadGroup.position.z += roadLength;
+            }
 
-            // Score = distance driven (roughly)
-            // We'll just increment score each frame
+            // Camera follows car
+            const targetCamZ = -6;
+            const targetCamX = carGroup.position.x * 0.3;
+            camera.position.x += (targetCamX - camera.position.x) * 0.05;
+            camera.position.z += (targetCamZ - camera.position.z) * 0.05;
+            camera.lookAt(carGroup.position.x * 0.3, 0, -2);
         }
 
-        // ============================================================
-        // RENDER LOOP
-        // ============================================================
+        // ----- Render Loop -----
         function animate() {
             requestAnimationFrame(animate);
             update();
             renderer.render(scene, camera);
         }
 
-        // ============================================================
-        // INPUT HANDLING
-        // ============================================================
+        // ----- Input -----
         document.addEventListener('keydown', (e) => {
             if (!gameRunning) {
                 if (e.key === ' ' || e.key === 'Space') {
@@ -643,11 +575,11 @@
                     e.preventDefault();
                     break;
                 case 'ArrowUp':
-                    accelerate = true;
+                    speedUp = true;
                     e.preventDefault();
                     break;
                 case 'ArrowDown':
-                    brake = true;
+                    slowDown = true;
                     e.preventDefault();
                     break;
                 case ' ':
@@ -668,11 +600,11 @@
                     e.preventDefault();
                     break;
                 case 'ArrowUp':
-                    accelerate = false;
+                    speedUp = false;
                     e.preventDefault();
                     break;
                 case 'ArrowDown':
-                    brake = false;
+                    slowDown = false;
                     e.preventDefault();
                     break;
                 case ' ':
@@ -683,7 +615,7 @@
             }
         });
 
-        // Touch support (simple – drag left/right to steer)
+        // Touch controls
         let touchX = null;
         renderer.domElement.addEventListener('touchstart', (e) => {
             e.preventDefault();
@@ -691,6 +623,8 @@
             touchX = touch.clientX;
             initAudio();
             startEngine();
+            // Auto-accelerate on touch
+            speedUp = true;
         });
         renderer.domElement.addEventListener('touchmove', (e) => {
             e.preventDefault();
@@ -698,49 +632,41 @@
             const touch = e.touches[0];
             const delta = touch.clientX - touchX;
             touchX = touch.clientX;
-            // Map to steering
-            if (delta > 5) {
+            if (delta > 8) {
                 moveRight = true;
                 moveLeft = false;
-                setTimeout(() => { moveRight = false; }, 50);
-            } else if (delta < -5) {
+                setTimeout(() => moveRight = false, 80);
+            } else if (delta < -8) {
                 moveLeft = true;
                 moveRight = false;
-                setTimeout(() => { moveLeft = false; }, 50);
+                setTimeout(() => moveLeft = false, 80);
             }
-            // Accelerate on touch
-            accelerate = true;
         });
         renderer.domElement.addEventListener('touchend', (e) => {
             e.preventDefault();
             touchX = null;
-            accelerate = false;
+            speedUp = false;
             moveLeft = false;
             moveRight = false;
         });
 
-        // Restart button
         restartBtn.addEventListener('click', resetGame);
 
-        // ============================================================
-        // WINDOW RESIZE
-        // ============================================================
+        // ----- Resize -----
         window.addEventListener('resize', () => {
-            const w = window.innerWidth;
-            const h = window.innerHeight;
+            const w = window.innerWidth,
+                h = window.innerHeight;
             camera.aspect = w / h;
             camera.updateProjectionMatrix();
             renderer.setSize(w, h);
         });
 
-        // ============================================================
-        // START
-        // ============================================================
+        // ----- Start -----
         resetGame();
         startEngine();
         animate();
 
-        console.log('🏁 3D Turbo Racer loaded!');
+        console.log('🏁 3D Turbo Racer (fixed) loaded!');
     </script>
 </body>
 </html>
