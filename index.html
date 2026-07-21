@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    <title>🏁 3D Turbo Racer</title>
+    <title>🏁 3D Turbo Racer – Porsche Edition</title>
     <style>
         * {
             margin: 0;
@@ -37,20 +37,22 @@
             font-size: 18px;
             font-weight: 600;
             text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+            flex-wrap: wrap;
+            gap: 10px;
         }
-        #score {
+        .hud-item {
             background: rgba(0, 0, 0, 0.5);
             padding: 6px 18px;
             border-radius: 30px;
             backdrop-filter: blur(4px);
             border: 1px solid rgba(255, 255, 255, 0.15);
         }
+        #speedDisplay {
+            color: #58a6ff;
+            font-weight: 700;
+        }
         #nitroDisplay {
-            background: rgba(0, 0, 0, 0.5);
-            padding: 6px 16px;
-            border-radius: 30px;
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255, 200, 0, 0.3);
+            border-color: rgba(255, 200, 0, 0.3);
             color: #f5a623;
         }
         #controls-hint {
@@ -115,8 +117,9 @@
 <body>
 
     <div id="hud">
-        <div id="score">🏁 0 m</div>
-        <div id="nitroDisplay">💨 NITRO</div>
+        <div class="hud-item" id="score">🏁 0 m</div>
+        <div class="hud-item" id="speedDisplay">🚀 0 km/h</div>
+        <div class="hud-item" id="nitroDisplay">💨 NITRO</div>
     </div>
     <div id="controls-hint">
         <kbd>←</kbd> <kbd>→</kbd> Steer &nbsp;·&nbsp; <kbd>↑</kbd> Speed Up &nbsp;·&nbsp; <kbd>↓</kbd> Slow Down &nbsp;·&nbsp; <kbd>Space</kbd> Nitro
@@ -136,10 +139,11 @@
 
         // ----- DOM refs -----
         const scoreDisplay = document.getElementById('score');
+        const speedDisplay = document.getElementById('speedDisplay');
         const nitroDisplay = document.getElementById('nitroDisplay');
         const restartBtn = document.getElementById('restartBtn');
 
-        // ----- Audio Engine (Web Audio) -----
+        // ----- Audio Engine -----
         let audioCtx = null;
 
         function initAudio() {
@@ -301,48 +305,129 @@
             roadGroup.add(obj);
         }
 
-        // ----- Player Car (stays at origin) -----
+        // ----- Player Car – White Porsche Style -----
         const carGroup = new THREE.Group();
         scene.add(carGroup);
 
-        const bodyMat = new THREE.MeshStandardMaterial({ color: 0x3fb950, roughness: 0.3, metalness: 0.6 });
-        const body = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.3, 1.8), bodyMat);
-        body.position.y = 0.3;
+        // Main body: low, wide, rounded
+        const bodyMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2, metalness: 0.7 });
+        const bodyGeo = new THREE.BoxGeometry(1.0, 0.25, 1.8);
+        // Slightly taper the front
+        const body = new THREE.Mesh(bodyGeo, bodyMat);
+        body.position.y = 0.2;
         body.castShadow = true;
         carGroup.add(body);
 
-        const cabinMat = new THREE.MeshStandardMaterial({ color: 0x1a2a3a, roughness: 0.4, metalness: 0.1 });
-        const cabin = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.25, 0.9), cabinMat);
-        cabin.position.set(0, 0.55, -0.1);
-        cabin.castShadow = true;
-        carGroup.add(cabin);
+        // Hood scoop / front bumper
+        const hoodMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.3, metalness: 0.5 });
+        const hood = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.08, 0.3), hoodMat);
+        hood.position.set(0, 0.38, 0.85);
+        carGroup.add(hood);
 
-        const hlMat = new THREE.MeshStandardMaterial({ color: 0xffdd44, emissive: 0xffaa00, emissiveIntensity: 0.5 });
-        const hl1 = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), hlMat);
-        hl1.position.set(-0.3, 0.25, 0.95);
-        carGroup.add(hl1);
-        const hl2 = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), hlMat);
-        hl2.position.set(0.3, 0.25, 0.95);
-        carGroup.add(hl2);
+        // Windshield (slanted)
+        const glassMat = new THREE.MeshStandardMaterial({ color: 0x88ccff, transparent: true, opacity: 0.4, roughness: 0.1,
+            metalness: 0.1 });
+        const windshield = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.15, 0.5), glassMat);
+        windshield.position.set(0, 0.48, 0.25);
+        carGroup.add(windshield);
 
+        // Rear window
+        const rearWindow = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.15, 0.4), glassMat);
+        rearWindow.position.set(0, 0.48, -0.5);
+        carGroup.add(rearWindow);
+
+        // Side windows (two small boxes)
+        const sideGlassMat = new THREE.MeshStandardMaterial({ color: 0x88ccff, transparent: true, opacity: 0.3 });
+        const sideL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.15, 0.5), sideGlassMat);
+        sideL.position.set(-0.5, 0.45, 0.1);
+        carGroup.add(sideL);
+        const sideR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.15, 0.5), sideGlassMat);
+        sideR.position.set(0.5, 0.45, 0.1);
+        carGroup.add(sideR);
+
+        // Headlights – four round (Porsche style)
+        const hlMat = new THREE.MeshStandardMaterial({ color: 0xffdd44, emissive: 0xffaa00, emissiveIntensity: 0.4 });
+        const hlPositions = [
+            [-0.35, 0.2, 0.95],
+            [-0.12, 0.2, 0.95],
+            [0.12, 0.2, 0.95],
+            [0.35, 0.2, 0.95]
+        ];
+        for (const pos of hlPositions) {
+            const hl = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), hlMat);
+            hl.position.set(pos[0], pos[1], pos[2]);
+            carGroup.add(hl);
+        }
+
+        // Taillights – thin strip
         const tlMat = new THREE.MeshStandardMaterial({ color: 0xff3333, emissive: 0xff0000, emissiveIntensity: 0.3 });
-        const tl1 = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), tlMat);
-        tl1.position.set(-0.3, 0.25, -0.95);
+        const tl1 = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.06, 0.06), tlMat);
+        tl1.position.set(-0.3, 0.2, -0.95);
         carGroup.add(tl1);
-        const tl2 = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), tlMat);
-        tl2.position.set(0.3, 0.25, -0.95);
+        const tl2 = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.06, 0.06), tlMat);
+        tl2.position.set(0.3, 0.2, -0.95);
         carGroup.add(tl2);
+
+        // Spoiler (small lip)
+        const spoilerMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.4, metalness: 0.2 });
+        const spoiler = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.04, 0.1), spoilerMat);
+        spoiler.position.set(0, 0.4, -0.9);
+        carGroup.add(spoiler);
 
         // Car shadow
         const shadowMat = new THREE.ShadowMaterial({ opacity: 0.3 });
-        const shadowPlane = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.8), shadowMat);
+        const shadowPlane = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 1.8), shadowMat);
         shadowPlane.rotation.x = -Math.PI / 2;
         shadowPlane.position.y = 0.01;
         carGroup.add(shadowPlane);
 
         carGroup.position.set(0, 0, 0);
 
-        // ----- Enemy Cars (children of roadGroup) -----
+        // ----- Turbo Fire (exhaust flame) -----
+        const flameGroup = new THREE.Group();
+        carGroup.add(flameGroup);
+        // We'll use a cone that scales and changes color based on nitro
+        const flameMat = new THREE.MeshStandardMaterial({
+            color: 0xff6600,
+            emissive: 0xff4400,
+            emissiveIntensity: 1.0,
+            transparent: true,
+            opacity: 0.8
+        });
+        const flameCone = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.4, 8), flameMat);
+        flameCone.rotation.x = Math.PI / 2;
+        flameCone.position.set(0, 0.1, -1.0);
+        flameGroup.add(flameCone);
+        // Add a second cone for outer glow
+        const flameGlow = new THREE.Mesh(
+            new THREE.ConeGeometry(0.3, 0.6, 8),
+            new THREE.MeshStandardMaterial({ color: 0xff8800, emissive: 0xff5500, emissiveIntensity: 0.5, transparent: true,
+                opacity: 0.3 })
+        );
+        flameGlow.rotation.x = Math.PI / 2;
+        flameGlow.position.set(0, 0.1, -1.0);
+        flameGroup.add(flameGlow);
+
+        // Turbo flame particles (extra sparkle) – small spheres
+        const particleCount = 20;
+        const particleGeo = new THREE.SphereGeometry(0.03, 4, 4);
+        const particleMat = new THREE.MeshStandardMaterial({ color: 0xffaa00, emissive: 0xff8800, emissiveIntensity: 0.8 });
+        const particles = [];
+        for (let i = 0; i < particleCount; i++) {
+            const p = new THREE.Mesh(particleGeo, particleMat);
+            p.position.set(
+                (Math.random() - 0.5) * 0.3,
+                (Math.random() - 0.5) * 0.3,
+                -1.0 - Math.random() * 0.5
+            );
+            flameGroup.add(p);
+            particles.push(p);
+        }
+
+        // Hide flame by default
+        flameGroup.visible = false;
+
+        // ----- Enemy Cars (front vehicles) -----
         const enemies = [];
         const enemyColors = [0xe34b4b, 0x4b7ae8, 0xe8a84b, 0x9b4be8];
 
@@ -350,18 +435,21 @@
             const color = enemyColors[Math.floor(Math.random() * enemyColors.length)];
             const group = new THREE.Group();
 
+            // Body
             const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.4, metalness: 0.3 });
             const bodyMesh = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.28, 1.6), mat);
             bodyMesh.position.y = 0.28;
             bodyMesh.castShadow = true;
             group.add(bodyMesh);
 
+            // Cabin
             const cabinEnemy = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.2, 0.8),
                 new THREE.MeshStandardMaterial({ color: 0x1a2a3a }));
             cabinEnemy.position.set(0, 0.5, -0.1);
             cabinEnemy.castShadow = true;
             group.add(cabinEnemy);
 
+            // Headlights (enemy)
             const hlE = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 6),
                 new THREE.MeshStandardMaterial({ color: 0xffdd44, emissive: 0xffaa00, emissiveIntensity: 0.3 }));
             hlE.position.set(-0.25, 0.2, 0.85);
@@ -371,12 +459,22 @@
             hlE2.position.set(0.25, 0.2, 0.85);
             group.add(hlE2);
 
-            // Position within road, at the far end
+            // Taillights
+            const tlE = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 6),
+                new THREE.MeshStandardMaterial({ color: 0xff3333, emissive: 0xff0000, emissiveIntensity: 0.3 }));
+            tlE.position.set(-0.25, 0.2, -0.85);
+            group.add(tlE);
+            const tlE2 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 6),
+                new THREE.MeshStandardMaterial({ color: 0xff3333, emissive: 0xff0000, emissiveIntensity: 0.3 }));
+            tlE2.position.set(0.25, 0.2, -0.85);
+            group.add(tlE2);
+
+            // Random x position within road
             const x = (Math.random() - 0.5) * (roadWidth - 1.2);
             group.position.set(x, 0, -roadLength / 2 - 2);
             roadGroup.add(group);
 
-            const speed = 1.5 + Math.random() * 2 + getSpeed() * 0.2;
+            const speed = 1.5 + Math.random() * 2.5 + getSpeed() * 0.2;
             enemies.push({
                 mesh: group,
                 speed: speed,
@@ -388,13 +486,13 @@
         // ----- Game State -----
         let gameRunning = true;
         let score = 0;
-        let speed = 4; // base speed
+        let speed = 4;
         const maxSpeed = 14;
         let nitro = 100;
         let nitroActive = false;
         let frame = 0;
         let spawnCounter = 0;
-        const spawnInterval = 35;
+        const spawnInterval = 30;
 
         let moveLeft = false,
             moveRight = false;
@@ -406,6 +504,10 @@
             let s = speed + Math.floor(score / 150) * 0.5;
             if (nitroActive) s *= 1.5;
             return Math.min(s, maxSpeed);
+        }
+
+        function getSpeedKmh() {
+            return Math.round(getSpeed() * 8); // scale for display
         }
 
         // ----- Collision (world space) -----
@@ -436,7 +538,9 @@
             carGroup.position.set(0, 0, 0);
             carGroup.rotation.y = 0;
             roadGroup.position.set(0, 0, 0);
+            flameGroup.visible = false;
             scoreDisplay.textContent = '🏁 0 m';
+            speedDisplay.textContent = '🚀 0 km/h';
             nitroDisplay.textContent = '💨 NITRO';
             nitroDisplay.style.color = '#f5a623';
             restartBtn.style.display = 'none';
@@ -454,6 +558,7 @@
             const currentSpeed = getSpeed();
             score += 0.1 * (1 + (nitroActive ? 0.6 : 0));
             scoreDisplay.textContent = `🏁 ${Math.floor(score)} m`;
+            speedDisplay.textContent = `🚀 ${getSpeedKmh()} km/h`;
 
             const speedFactor = Math.min(currentSpeed / maxSpeed, 1);
             updateEngine(speedFactor);
@@ -462,12 +567,31 @@
             if (nitroKey && nitro > 5 && !nitroActive) {
                 nitroActive = true;
                 playNitro();
+                // Show flame
+                flameGroup.visible = true;
+                // Scale flame with nitro level
             }
             if (nitroActive) {
                 nitro -= 0.5;
+                // Animate flame size
+                const scale = 0.5 + (nitro / 100) * 1.5;
+                flameCone.scale.set(scale, scale * 0.8, scale);
+                flameGlow.scale.set(scale * 1.2, scale * 1.2, scale * 1.2);
+                // Randomize particles
+                for (const p of particles) {
+                    p.position.x += (Math.random() - 0.5) * 0.02;
+                    p.position.y += (Math.random() - 0.5) * 0.02;
+                    p.position.z -= 0.01;
+                    if (p.position.z < -1.8) {
+                        p.position.z = -1.0;
+                        p.position.x = (Math.random() - 0.5) * 0.3;
+                        p.position.y = (Math.random() - 0.5) * 0.3;
+                    }
+                }
                 if (nitro <= 0) {
                     nitro = 0;
                     nitroActive = false;
+                    flameGroup.visible = false;
                     nitroDisplay.textContent = '⛽ EMPTY';
                     nitroDisplay.style.color = '#f85149';
                 } else {
@@ -480,6 +604,8 @@
                     nitroDisplay.textContent = '💨 NITRO';
                     nitroDisplay.style.color = '#f5a623';
                 }
+                // Hide flame if not active
+                if (flameGroup.visible) flameGroup.visible = false;
             }
 
             // Steering
@@ -489,36 +615,35 @@
             if (moveRight) targetRot = -0.4;
             carGroup.rotation.y += (targetRot - carGroup.rotation.y) * 0.1;
 
-            // Speed control (modify base speed)
+            // Speed control
             if (speedUp) speed = Math.min(speed + 0.1, maxSpeed);
             if (slowDown) speed = Math.max(speed - 0.1, 2);
 
-            // Move world backward (simulate car moving forward)
+            // Move world backward
             const moveZ = currentSpeed * 0.08;
             roadGroup.position.z -= moveZ;
 
-            // Lateral movement – move car sideways
+            // Lateral movement
             const lateral = Math.sin(carGroup.rotation.y) * currentSpeed * 0.06;
             carGroup.position.x += lateral;
-            // Clamp to road
             const halfRoad = roadWidth / 2 - 0.5;
             if (carGroup.position.x > halfRoad) carGroup.position.x = halfRoad;
             if (carGroup.position.x < -halfRoad) carGroup.position.x = -halfRoad;
 
             // Spawn enemies
             spawnCounter++;
-            const spawnRate = Math.max(15, spawnInterval - Math.floor(score / 30));
+            const spawnRate = Math.max(12, spawnInterval - Math.floor(score / 30));
             if (spawnCounter >= spawnRate) {
                 spawnCounter = 0;
-                if (enemies.length < 20) spawnEnemy();
+                if (enemies.length < 25) spawnEnemy();
             }
 
-            // Move enemies forward relative to roadGroup (they are children)
+            // Move enemies
             for (let i = enemies.length - 1; i >= 0; i--) {
                 const e = enemies[i];
                 e.mesh.position.z += e.speed * 0.08;
 
-                // Collision (get world positions)
+                // Collision
                 const playerBox = getCarBox(carGroup);
                 const enemyBox = getCarBox(e.mesh);
                 if (boxesCollide(playerBox, enemyBox)) {
@@ -526,22 +651,23 @@
                     playCrash();
                     stopEngine();
                     restartBtn.style.display = 'block';
+                    flameGroup.visible = false;
                     return;
                 }
 
-                // Remove if passed player (in front)
+                // Remove if passed player
                 if (e.mesh.position.z > roadLength / 2 + 2) {
                     roadGroup.remove(e.mesh);
                     enemies.splice(i, 1);
                 }
             }
 
-            // Wrap roadGroup when it moves too far
+            // Wrap road
             if (roadGroup.position.z < -roadLength) {
                 roadGroup.position.z += roadLength;
             }
 
-            // Camera follows car
+            // Camera follows
             const targetCamZ = -6;
             const targetCamX = carGroup.position.x * 0.3;
             camera.position.x += (targetCamX - camera.position.x) * 0.05;
@@ -623,7 +749,6 @@
             touchX = touch.clientX;
             initAudio();
             startEngine();
-            // Auto-accelerate on touch
             speedUp = true;
         });
         renderer.domElement.addEventListener('touchmove', (e) => {
@@ -666,7 +791,7 @@
         startEngine();
         animate();
 
-        console.log('🏁 3D Turbo Racer (fixed) loaded!');
+        console.log('🏁 3D Turbo Racer – Porsche Edition loaded!');
     </script>
 </body>
 </html>
