@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    <title>🏁 Turbo Racer – Realistic Car Game</title>
+    <title>🏁 3D Turbo Racer</title>
     <style>
         * {
             margin: 0;
@@ -11,176 +11,150 @@
             box-sizing: border-box;
         }
         body {
+            overflow: hidden;
             background: #0a0e17;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
-            color: #e6edf3;
-            padding: 16px;
-            margin: 0;
-            user-select: none;
+            font-family: 'Segoe UI', system-ui, sans-serif;
             touch-action: none;
-        }
-        .game-wrapper {
-            background: linear-gradient(145deg, #161b22, #0d1117);
-            border-radius: 32px;
-            padding: 24px 20px;
-            border: 1px solid #30363d;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
-            max-width: 500px;
-            width: 100%;
-            text-align: center;
-        }
-        h1 {
-            font-size: 28px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #f0883e, #f5a623, #ff6b35);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            letter-spacing: 1px;
-            margin-bottom: 4px;
-        }
-        .subtitle {
-            color: #8b949e;
-            font-size: 13px;
-            margin-bottom: 14px;
+            user-select: none;
         }
         canvas {
             display: block;
-            width: 100%;
-            height: auto;
-            aspect-ratio: 400 / 700;
-            background: #1c2333;
-            border-radius: 20px;
-            border: 2px solid #30363d;
-            touch-action: none;
-            cursor: none;
-            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.5);
+            width: 100vw;
+            height: 100vh;
         }
-        .controls {
+
+        /* HUD overlay */
+        #hud {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            width: 100%;
+            padding: 0 24px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 16px;
-        }
-        .score-box {
-            background: #0d1117;
-            padding: 6px 18px;
-            border-radius: 40px;
-            border: 1px solid #30363d;
+            align-items: flex-start;
+            pointer-events: none;
+            z-index: 10;
+            color: #fff;
             font-size: 18px;
             font-weight: 600;
-            color: #c9d1d9;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
         }
-        .score-box span {
+        #score {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 6px 18px;
+            border-radius: 30px;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        #nitroDisplay {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 6px 16px;
+            border-radius: 30px;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 200, 0, 0.3);
             color: #f5a623;
         }
-        .btn {
-            background: #21262d;
-            border: 1px solid #30363d;
-            color: #c9d1d9;
-            padding: 8px 22px;
-            border-radius: 40px;
-            font-weight: 600;
+
+        #controls-hint {
+            position: absolute;
+            bottom: 30px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.3);
             font-size: 14px;
-            cursor: pointer;
-            transition: 0.2s;
+            pointer-events: none;
+            z-index: 10;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+            letter-spacing: 1px;
         }
-        .btn:hover {
-            background: #30363d;
-            border-color: #f5a623;
-            color: #fff;
+        #controls-hint kbd {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 2px 10px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin: 0 4px;
         }
-        .btn-primary {
+
+        #restartBtn {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
             background: linear-gradient(135deg, #238636, #2ea043);
             border: none;
             color: #fff;
+            font-weight: 700;
+            font-size: 18px;
+            padding: 12px 40px;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 8px 30px rgba(46, 160, 67, 0.4);
+            transition: 0.2s;
+            display: none;
+            pointer-events: auto;
         }
-        .btn-primary:hover {
-            transform: scale(1.03);
-            box-shadow: 0 6px 20px rgba(46, 160, 67, 0.3);
+        #restartBtn:hover {
+            transform: translateX(-50%) scale(1.05);
         }
-        .keys-hint {
-            color: #484f58;
-            font-size: 12px;
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-top: 6px;
-        }
-        .keys-hint kbd {
-            background: #0d1117;
-            padding: 2px 10px;
-            border-radius: 4px;
-            border: 1px solid #30363d;
-            font-size: 13px;
-            color: #c9d1d9;
-        }
-        .turbo-indicator {
-            display: inline-block;
-            background: #1f2a3a;
-            padding: 4px 12px;
-            border-radius: 30px;
-            font-size: 14px;
-            border: 1px solid #f5a623;
-            color: #f5a623;
-        }
-        @media (max-width: 480px) {
-            .game-wrapper {
-                padding: 16px 12px;
+
+        @media (max-width: 600px) {
+            #hud {
+                font-size: 14px;
+                padding: 0 16px;
+                top: 12px;
             }
-            .controls {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .keys-hint {
+            #controls-hint {
                 font-size: 11px;
+                bottom: 16px;
+            }
+            #restartBtn {
+                font-size: 16px;
+                padding: 10px 32px;
+                bottom: 60px;
             }
         }
     </style>
 </head>
 <body>
 
-    <div class="game-wrapper">
-        <h1>🏁 TURBO RACER</h1>
-        <p class="subtitle">Nitro • Drift • Survive</p>
-
-        <canvas id="gameCanvas" width="400" height="700"></canvas>
-
-        <div class="controls">
-            <div class="score-box">🏁 <span id="scoreDisplay">0</span> m</div>
-            <div class="turbo-indicator" id="turboDisplay">💨 NITRO</div>
-            <button class="btn btn-primary" id="restartBtn">🔄 Restart</button>
-        </div>
-
-        <div class="keys-hint">
-            <span><kbd>←</kbd> <kbd>→</kbd> Steer</span>
-            <span><kbd>↑</kbd> Accelerate</span>
-            <span><kbd>↓</kbd> Brake</span>
-            <span><kbd>Space</kbd> 💨 Nitro</span>
-        </div>
+    <!-- HUD -->
+    <div id="hud">
+        <div id="score">🏁 0 m</div>
+        <div id="nitroDisplay">💨 NITRO</div>
     </div>
+    <div id="controls-hint">
+        <kbd>←</kbd> <kbd>→</kbd> Steer &nbsp;·&nbsp; <kbd>↑</kbd> Accelerate &nbsp;·&nbsp; <kbd>↓</kbd> Brake &nbsp;·&nbsp; <kbd>Space</kbd> Nitro
+    </div>
+    <button id="restartBtn">🔄 New Game</button>
 
-    <script>
-        // ============================================================
-        // CANVAS SETUP
-        // ============================================================
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const scoreDisplay = document.getElementById('scoreDisplay');
-        const turboDisplay = document.getElementById('turboDisplay');
+    <!-- Three.js from CDN -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.126.0/build/three.module.js"
+            }
+        }
+    </script>
 
-        const W = 400,
-            H = 700;
+    <script type="module">
+        // ============================================================
+        // IMPORTS
+        // ============================================================
+        import * as THREE from 'three';
+        import { OrbitControls } from 'https://unpkg.com/three@0.126.0/examples/jsm/controls/OrbitControls.js';
 
         // ============================================================
-        // AUDIO ENGINE (Web Audio – no external files)
+        // DOM REFS
+        // ============================================================
+        const scoreDisplay = document.getElementById('score');
+        const nitroDisplay = document.getElementById('nitroDisplay');
+        const restartBtn = document.getElementById('restartBtn');
+
+        // ============================================================
+        // AUDIO ENGINE (Web Audio – synthesized)
         // ============================================================
         let audioCtx = null;
 
@@ -193,33 +167,31 @@
             }
         }
 
-        // Engine sound – continuous rumble
         let engineOsc = null;
         let engineGain = null;
 
-        function startEngineSound() {
-            initAudio();
+        function startEngine() {
             if (engineOsc) return;
+            initAudio();
             engineOsc = audioCtx.createOscillator();
             engineGain = audioCtx.createGain();
             engineOsc.type = 'sawtooth';
-            engineOsc.frequency.setValueAtTime(40, audioCtx.currentTime);
-            engineGain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            engineOsc.frequency.setValueAtTime(35, audioCtx.currentTime);
+            engineGain.gain.setValueAtTime(0.06, audioCtx.currentTime);
             engineOsc.connect(engineGain);
             engineGain.connect(audioCtx.destination);
             engineOsc.start();
         }
 
-        function updateEngineSound(speedFactor) {
+        function updateEngine(speedFactor) {
             if (!engineOsc) return;
-            // speedFactor: 0~1
-            const freq = 30 + speedFactor * 80;
+            const freq = 30 + speedFactor * 90;
             engineOsc.frequency.setTargetAtTime(freq, audioCtx.currentTime, 0.1);
-            const vol = 0.04 + speedFactor * 0.12;
+            const vol = 0.04 + speedFactor * 0.14;
             engineGain.gain.setTargetAtTime(vol, audioCtx.currentTime, 0.1);
         }
 
-        function stopEngineSound() {
+        function stopEngine() {
             if (engineOsc) {
                 engineOsc.stop();
                 engineOsc = null;
@@ -227,24 +199,22 @@
             }
         }
 
-        // Turbo boost – short pitch rise
-        function playTurboSound() {
+        function playNitro() {
             initAudio();
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(100, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.3);
+            osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(350, audioCtx.currentTime + 0.25);
             gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start();
-            osc.stop(audioCtx.currentTime + 0.3);
+            osc.stop(audioCtx.currentTime + 0.25);
         }
 
-        // Crash sound
-        function playCrashSound() {
+        function playCrash() {
             initAudio();
             const bufferSize = audioCtx.sampleRate * 0.3;
             const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
@@ -255,7 +225,7 @@
             const noise = audioCtx.createBufferSource();
             noise.buffer = buffer;
             const gain = audioCtx.createGain();
-            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
             noise.connect(gain);
             gain.connect(audioCtx.destination);
@@ -264,398 +234,399 @@
         }
 
         // ============================================================
-        // GAME STATE
+        // THREE.JS SCENE SETUP
         // ============================================================
-        let game = {
-            running: true,
-            score: 0,
-            speed: 2.5, // base speed
-            maxSpeed: 10,
-            frame: 0,
-            nitro: 100, // nitro percentage
-            nitroActive: false,
-        };
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x1a2639);
+        scene.fog = new THREE.Fog(0x1a2639, 30, 80);
 
-        // Player car
-        const player = {
-            x: W / 2 - 22,
-            y: H - 110,
-            w: 44,
-            h: 76,
-            speed: 4,
-            dx: 0,
-            targetX: W / 2 - 22,
-        };
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(0, 5, 8);
+        camera.lookAt(0, 0, 0);
 
-        // Enemies
-        let enemies = [];
-        const ENEMY_SPAWN_BASE = 35;
-
-        // Road
-        let roadOffset = 0;
-        let curveOffset = 0;
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.prepend(renderer.domElement);
 
         // ============================================================
-        // HELPERS
+        // LIGHTING
         // ============================================================
-        function random(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+        const ambientLight = new THREE.AmbientLight(0x404060, 0.5);
+        scene.add(ambientLight);
 
-        function getSpeed() {
-            let s = game.speed + Math.floor(game.score / 120);
-            if (game.nitroActive) s *= 1.6;
-            return Math.min(s, game.maxSpeed);
+        const dirLight = new THREE.DirectionalLight(0xffeedd, 1.2);
+        dirLight.position.set(10, 20, 10);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 1024;
+        dirLight.shadow.mapSize.height = 1024;
+        const d = 20;
+        dirLight.shadow.camera.left = -d;
+        dirLight.shadow.camera.right = d;
+        dirLight.shadow.camera.top = d;
+        dirLight.shadow.camera.bottom = -d;
+        dirLight.shadow.camera.near = 1;
+        dirLight.shadow.camera.far = 50;
+        scene.add(dirLight);
+
+        const fillLight = new THREE.DirectionalLight(0x4488ff, 0.3);
+        fillLight.position.set(-10, 5, 10);
+        scene.add(fillLight);
+
+        // ============================================================
+        // ROAD
+        // ============================================================
+        const roadGroup = new THREE.Group();
+        scene.add(roadGroup);
+
+        // Road surface
+        const roadLength = 200;
+        const roadWidth = 8;
+        const roadGeo = new THREE.BoxGeometry(roadWidth, 0.1, roadLength);
+        const roadMat = new THREE.MeshStandardMaterial({ color: 0x2a3344, roughness: 0.8, metalness: 0.1 });
+        const road = new THREE.Mesh(roadGeo, roadMat);
+        road.position.y = -0.05;
+        road.receiveShadow = true;
+        roadGroup.add(road);
+
+        // Lane markings (dashed lines)
+        const markMat = new THREE.MeshStandardMaterial({ color: 0xf0f6fc, emissive: 0x8899aa, emissiveIntensity: 0.2 });
+        for (let z = -roadLength / 2; z < roadLength / 2; z += 3) {
+            const mark = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.02, 1.5), markMat);
+            mark.position.set(0, 0.06, z);
+            roadGroup.add(mark);
+        }
+
+        // Road edges (white lines)
+        const edgeMat = new THREE.MeshStandardMaterial({ color: 0xf0f6fc, emissive: 0x8899aa, emissiveIntensity: 0.1 });
+        for (let side = -1; side <= 1; side += 2) {
+            const edge = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.02, roadLength), edgeMat);
+            edge.position.set(side * (roadWidth / 2 - 0.3), 0.06, 0);
+            roadGroup.add(edge);
+        }
+
+        // Side objects (trees / buildings – just colored boxes)
+        const colors = [0x3fb950, 0x58a6ff, 0xf0883e, 0x8b949e];
+        for (let z = -roadLength / 2; z < roadLength / 2; z += 3) {
+            if (Math.random() > 0.7) continue;
+            const h = 0.5 + Math.random() * 1.5;
+            const w = 0.5 + Math.random() * 0.5;
+            const d = 0.5 + Math.random() * 0.5;
+            const objMat = new THREE.MeshStandardMaterial({
+                color: colors[Math.floor(Math.random() * colors.length)],
+                roughness: 0.7,
+            });
+            const obj = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), objMat);
+            const side = Math.random() > 0.5 ? 1 : -1;
+            const xOffset = roadWidth / 2 + 1 + Math.random() * 2;
+            obj.position.set(side * xOffset, h / 2, z);
+            obj.castShadow = true;
+            obj.receiveShadow = true;
+            roadGroup.add(obj);
         }
 
         // ============================================================
-        // ENEMY SPAWN
+        // PLAYER CAR
         // ============================================================
+        const carGroup = new THREE.Group();
+        scene.add(carGroup);
+
+        // Car body
+        const bodyMat = new THREE.MeshStandardMaterial({ color: 0x3fb950, roughness: 0.3, metalness: 0.6 });
+        const body = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.3, 1.8), bodyMat);
+        body.position.y = 0.3;
+        body.castShadow = true;
+        carGroup.add(body);
+
+        // Cabin
+        const cabinMat = new THREE.MeshStandardMaterial({ color: 0x1a2a3a, roughness: 0.4, metalness: 0.1 });
+        const cabin = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.25, 0.9), cabinMat);
+        cabin.position.set(0, 0.55, -0.1);
+        cabin.castShadow = true;
+        carGroup.add(cabin);
+
+        // Headlights
+        const hlMat = new THREE.MeshStandardMaterial({ color: 0xffdd44, emissive: 0xffaa00, emissiveIntensity: 0.5 });
+        const hl1 = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), hlMat);
+        hl1.position.set(-0.3, 0.25, 0.95);
+        carGroup.add(hl1);
+        const hl2 = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), hlMat);
+        hl2.position.set(0.3, 0.25, 0.95);
+        carGroup.add(hl2);
+
+        // Taillights
+        const tlMat = new THREE.MeshStandardMaterial({ color: 0xff3333, emissive: 0xff0000, emissiveIntensity: 0.3 });
+        const tl1 = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), tlMat);
+        tl1.position.set(-0.3, 0.25, -0.95);
+        carGroup.add(tl1);
+        const tl2 = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), tlMat);
+        tl2.position.set(0.3, 0.25, -0.95);
+        carGroup.add(tl2);
+
+        // Car shadow (for ground)
+        const shadowMat = new THREE.ShadowMaterial({ opacity: 0.3 });
+        const shadowPlane = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.8), shadowMat);
+        shadowPlane.rotation.x = -Math.PI / 2;
+        shadowPlane.position.y = 0.01;
+        carGroup.add(shadowPlane);
+
+        // Initial position
+        carGroup.position.set(0, 0, 5);
+
+        // ============================================================
+        // ENEMY CARS
+        // ============================================================
+        const enemies = [];
+        const enemyColors = [0xe34b4b, 0x4b7ae8, 0xe8a84b, 0x9b4be8];
+
         function spawnEnemy() {
-            const w = random(32, 48);
-            const h = random(60, 80);
-            const x = random(10, W - w - 10);
-            const speed = getSpeed() * (0.6 + Math.random() * 0.6);
+            const color = enemyColors[Math.floor(Math.random() * enemyColors.length)];
+            const group = new THREE.Group();
+
+            // Body
+            const mat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.4, metalness: 0.3 });
+            const bodyMesh = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.28, 1.6), mat);
+            bodyMesh.position.y = 0.28;
+            bodyMesh.castShadow = true;
+            group.add(bodyMesh);
+
+            // Cabin
+            const cabinEnemy = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.2, 0.8),
+                new THREE.MeshStandardMaterial({ color: 0x1a2a3a }));
+            cabinEnemy.position.set(0, 0.5, -0.1);
+            cabinEnemy.castShadow = true;
+            group.add(cabinEnemy);
+
+            // Headlights (enemy)
+            const hlE = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 6),
+                new THREE.MeshStandardMaterial({ color: 0xffdd44, emissive: 0xffaa00, emissiveIntensity: 0.3 }));
+            hlE.position.set(-0.25, 0.2, 0.85);
+            group.add(hlE);
+            const hlE2 = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 6),
+                new THREE.MeshStandardMaterial({ color: 0xffdd44, emissive: 0xffaa00, emissiveIntensity: 0.3 }));
+            hlE2.position.set(0.25, 0.2, 0.85);
+            group.add(hlE2);
+
+            // Random x position within road
+            const x = (Math.random() - 0.5) * (roadWidth - 1.2);
+            group.position.set(x, 0, -roadLength / 2 - 2);
+            scene.add(group);
+
+            const speed = 2 + Math.random() * 3 + getSpeed() * 0.3;
             enemies.push({
-                x: x,
-                y: -h,
-                w: w,
-                h: h,
+                mesh: group,
                 speed: speed,
-                color: `hsl(${random(0, 30)}, 70%, ${random(35, 55)}%)`,
+                width: 0.8,
+                depth: 1.6,
             });
         }
 
         // ============================================================
-        // COLLISION
+        // GAME STATE
         // ============================================================
-        function rectCollide(r1, r2) {
-            return !(r2.x > r1.x + r1.w ||
-                r2.x + r2.w < r1.x ||
-                r2.y > r1.y + r1.h ||
-                r2.y + r2.h < r1.y);
+        let gameRunning = true;
+        let score = 0;
+        let speed = 3;
+        const maxSpeed = 12;
+        let nitro = 100;
+        let nitroActive = false;
+        let frame = 0;
+        let spawnCounter = 0;
+        const spawnInterval = 40;
+
+        // Player movement
+        let moveLeft = false;
+        let moveRight = false;
+        let accelerate = false;
+        let brake = false;
+        let nitroKey = false;
+
+        function getSpeed() {
+            let s = speed + Math.floor(score / 150) * 0.5;
+            if (nitroActive) s *= 1.5;
+            return Math.min(s, maxSpeed);
         }
 
         // ============================================================
-        // RESET
+        // COLLISION DETECTION (AABB)
+        // ============================================================
+        function getCarBox(group) {
+            const pos = group.position;
+            return {
+                x: pos.x,
+                z: pos.z,
+                w: 0.9,
+                d: 1.8,
+            };
+        }
+
+        function boxesCollide(a, b) {
+            return Math.abs(a.x - b.x) < (a.w / 2 + b.w / 2) &&
+                Math.abs(a.z - b.z) < (a.d / 2 + b.d / 2);
+        }
+
+        // ============================================================
+        // RESET GAME
         // ============================================================
         function resetGame() {
-            game.running = true;
-            game.score = 0;
-            game.speed = 2.5;
-            game.frame = 0;
-            game.nitro = 100;
-            game.nitroActive = false;
-            enemies = [];
-            player.x = W / 2 - 22;
-            player.y = H - 110;
-            player.dx = 0;
-            scoreDisplay.textContent = '0';
-            turboDisplay.textContent = '💨 NITRO';
-            turboDisplay.style.borderColor = '#f5a623';
-            stopEngineSound();
-            if (engineOsc) {
-                engineOsc = null;
-                engineGain = null;
-            }
-            // Re-start engine after a moment
-            setTimeout(() => { if (game.running) startEngineSound(); }, 100);
-        }
-
-        // ============================================================
-        // UPDATE
-        // ============================================================
-        function update() {
-            if (!game.running) {
-                // Engine fade out
-                if (engineGain) {
-                    engineGain.gain.setTargetAtTime(0.0, audioCtx.currentTime, 0.05);
-                }
-                return;
-            }
-
-            // Ensure audio context is running
-            if (audioCtx && audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-
-            const speed = getSpeed();
-            game.score += 0.1 * (1 + (game.nitroActive ? 0.5 : 0));
-            scoreDisplay.textContent = Math.floor(game.score);
-
-            // Update engine sound
-            const speedFactor = Math.min(speed / game.maxSpeed, 1);
-            updateEngineSound(speedFactor);
-
-            // Road scroll
-            roadOffset = (roadOffset + speed * 1.2) % 80;
-            // Slight curve simulation
-            curveOffset = Math.sin(game.frame / 300) * 8;
-
-            // Player movement with smoothing
-            player.x += player.dx;
-            // Boundary
-            if (player.x < 2) player.x = 2;
-            if (player.x + player.w > W - 2) player.x = W - player.w - 2;
-
-            // Nitro
-            if (game.nitroActive) {
-                game.nitro = Math.max(0, game.nitro - 0.4);
-                if (game.nitro <= 0) {
-                    game.nitroActive = false;
-                    turboDisplay.textContent = '⛽ NO NITRO';
-                    turboDisplay.style.borderColor = '#f85149';
-                } else {
-                    turboDisplay.textContent = `💨 ${Math.floor(game.nitro)}%`;
-                }
-            } else {
-                // Recharge slowly
-                game.nitro = Math.min(100, game.nitro + 0.08);
-                if (game.nitro > 20) {
-                    turboDisplay.textContent = '💨 NITRO';
-                    turboDisplay.style.borderColor = '#f5a623';
-                }
-            }
-
-            // Spawn enemies
-            game.frame++;
-            const spawnRate = Math.max(12, ENEMY_SPAWN_BASE - Math.floor(game.score / 25));
-            if (game.frame % spawnRate === 0) {
-                spawnEnemy();
-            }
-
-            // Move enemies and check collision
-            for (let i = enemies.length - 1; i >= 0; i--) {
-                const e = enemies[i];
-                e.y += e.speed;
-
-                // Collision with player (slightly smaller hitbox for fairness)
-                const hitboxPlayer = { x: player.x + 6, y: player.y + 6, w: player.w - 12, h: player.h - 12 };
-                const hitboxEnemy = { x: e.x + 4, y: e.y + 4, w: e.w - 8, h: e.h - 8 };
-                if (rectCollide(hitboxPlayer, hitboxEnemy)) {
-                    game.running = false;
-                    playCrashSound();
-                    stopEngineSound();
-                    return;
-                }
-
-                // Remove if off screen
-                if (e.y > H + 60) {
-                    enemies.splice(i, 1);
-                }
-            }
-        }
-
-        // ============================================================
-        // DRAW – REALISTIC RENDERING
-        // ============================================================
-        function draw() {
-            ctx.clearRect(0, 0, W, H);
-
-            // ----- Sky gradient -----
-            const skyGrad = ctx.createLinearGradient(0, 0, 0, H * 0.4);
-            skyGrad.addColorStop(0, '#0b1a2e');
-            skyGrad.addColorStop(1, '#1c2f44');
-            ctx.fillStyle = skyGrad;
-            ctx.fillRect(0, 0, W, H * 0.4);
-
-            // ----- Road with perspective -----
-            // Vanishing point at (W/2, 150)
-            const vpY = 140;
-            const roadWidthTop = 80;
-            const roadWidthBottom = W;
-
-            // Draw road surface
-            const grad = ctx.createLinearGradient(0, vpY, 0, H);
-            grad.addColorStop(0, '#2a3344');
-            grad.addColorStop(1, '#1e2636');
-            ctx.fillStyle = grad;
-            ctx.beginPath();
-            ctx.moveTo(W / 2 - roadWidthTop / 2 + curveOffset * 0.3, vpY);
-            ctx.lineTo(W / 2 + roadWidthTop / 2 + curveOffset * 0.3, vpY);
-            ctx.lineTo(W / 2 + roadWidthBottom / 2 + curveOffset, H);
-            ctx.lineTo(W / 2 - roadWidthBottom / 2 + curveOffset, H);
-            ctx.closePath();
-            ctx.fill();
-
-            // Road edges (white lines with perspective)
-            ctx.strokeStyle = '#f0f6fc';
-            ctx.lineWidth = 3;
-            ctx.setLineDash([0, 0]);
-
-            // Left edge
-            ctx.beginPath();
-            ctx.moveTo(W / 2 - roadWidthTop / 2 + curveOffset * 0.3, vpY);
-            ctx.lineTo(W / 2 - roadWidthBottom / 2 + curveOffset, H);
-            ctx.stroke();
-
-            // Right edge
-            ctx.beginPath();
-            ctx.moveTo(W / 2 + roadWidthTop / 2 + curveOffset * 0.3, vpY);
-            ctx.lineTo(W / 2 + roadWidthBottom / 2 + curveOffset, H);
-            ctx.stroke();
-
-            // Lane markings (dashed with perspective)
-            ctx.strokeStyle = '#f0f6fc';
-            ctx.lineWidth = 3;
-            ctx.setLineDash([20, 30]);
-            ctx.lineDashOffset = -roadOffset * 0.8;
-            const laneX = W / 2 + curveOffset * 0.5;
-            ctx.beginPath();
-            ctx.moveTo(laneX, vpY + 30);
-            ctx.lineTo(laneX, H);
-            ctx.stroke();
-            ctx.setLineDash([]);
-
-            // ----- Road side objects (trees/buildings) - simple rects with perspective -----
-            const objCount = 10;
-            for (let i = 0; i < objCount; i++) {
-                const t = i / objCount;
-                const y = vpY + t * (H - vpY);
-                const scale = 0.3 + t * 0.7;
-                const xOffset = (W / 2 - roadWidthBottom / 2 + curveOffset) * t + (W / 2 - roadWidthTop / 2 + curveOffset *
-                0.3) * (1 - t);
-                // Left side
-                const sideX = xOffset - 20 - (1 - t) * 10;
-                ctx.fillStyle = `hsl(${140 + t * 20}, 40%, ${20 + t * 20}%)`;
-                ctx.fillRect(sideX, y - 8 * scale, 8 * scale, 16 * scale);
-                // Right side
-                const sideX2 = W - sideX - 8 * scale;
-                ctx.fillStyle = `hsl(${140 + t * 20}, 40%, ${20 + t * 20}%)`;
-                ctx.fillRect(sideX2, y - 8 * scale, 8 * scale, 16 * scale);
-            }
-
-            // ----- Enemies (detailed cars) -----
+            // Remove enemies
             for (const e of enemies) {
-                drawCar(e.x, e.y, e.w, e.h, e.color, true);
+                scene.remove(e.mesh);
             }
-
-            // ----- Player car (with glow) -----
-            // Shadow
-            ctx.shadowColor = 'rgba(0,180,255,0.3)';
-            ctx.shadowBlur = 25;
-            drawCar(player.x, player.y, player.w, player.h, '#3fb950', false);
-            ctx.shadowBlur = 0;
-
-            // Speed lines (visual effect when fast)
-            const speed = getSpeed();
-            if (speed > 6) {
-                ctx.strokeStyle = `rgba(255,255,255,${(speed - 6) / 6 * 0.15})`;
-                ctx.lineWidth = 2;
-                for (let i = 0; i < 10; i++) {
-                    const x = random(0, W);
-                    const y = random(0, H);
-                    ctx.beginPath();
-                    ctx.moveTo(x, y);
-                    ctx.lineTo(x - 10, y + 20);
-                    ctx.stroke();
-                }
-            }
-
-            // ----- HUD -----
-            ctx.fillStyle = '#8b949e';
-            ctx.font = '12px monospace';
-            ctx.fillText(`Speed: ${Math.round(speed * 15)} km/h`, 12, 25);
-
-            // Nitro bar
-            const nitroPercent = game.nitro / 100;
-            ctx.fillStyle = '#21262d';
-            ctx.fillRect(12, 34, 80, 8);
-            ctx.fillStyle = nitroPercent > 0.2 ? '#f5a623' : '#f85149';
-            ctx.fillRect(12, 34, 80 * nitroPercent, 8);
-
-            // Game Over
-            if (!game.running) {
-                ctx.fillStyle = 'rgba(0,0,0,0.7)';
-                ctx.fillRect(0, 0, W, H);
-                ctx.fillStyle = '#f85149';
-                ctx.font = 'bold 44px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText('💥 CRASH', W / 2, H / 2 - 30);
-                ctx.fillStyle = '#e6edf3';
-                ctx.font = '22px sans-serif';
-                ctx.fillText(`Distance: ${Math.floor(game.score)} m`, W / 2, H / 2 + 40);
-                ctx.fillStyle = '#8b949e';
-                ctx.font = '16px sans-serif';
-                ctx.fillText('Press "Restart" to try again', W / 2, H / 2 + 90);
-                ctx.textAlign = 'left';
-            }
-        }
-
-        // ---- Draw a car with details ----
-        function drawCar(x, y, w, h, color, isEnemy) {
-            const r = 6;
-            ctx.save();
-
-            // Main body
-            ctx.shadowColor = 'rgba(0,0,0,0.4)';
-            ctx.shadowBlur = 10;
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.roundRect(x, y, w, h, r);
-            ctx.fill();
-
-            // Windshield
-            ctx.shadowBlur = 0;
-            ctx.fillStyle = 'rgba(0,0,0,0.35)';
-            ctx.beginPath();
-            ctx.roundRect(x + 6, y + 8, w - 12, 16, 4);
-            ctx.fill();
-
-            // Rear window
-            ctx.fillStyle = 'rgba(0,0,0,0.3)';
-            ctx.beginPath();
-            ctx.roundRect(x + 8, y + h - 24, w - 16, 14, 4);
-            ctx.fill();
-
-            // Headlights (front)
-            ctx.fillStyle = isEnemy ? '#ffd700' : '#00d4ff';
-            ctx.shadowColor = isEnemy ? '#ffd700' : '#00d4ff';
-            ctx.shadowBlur = 12;
-            ctx.fillRect(x + 4, y + 2, 8, 6);
-            ctx.fillRect(x + w - 12, y + 2, 8, 6);
-
-            // Tail lights
-            ctx.fillStyle = '#ff3b3b';
-            ctx.shadowColor = '#ff3b3b';
-            ctx.shadowBlur = 8;
-            ctx.fillRect(x + 4, y + h - 6, 8, 4);
-            ctx.fillRect(x + w - 12, y + h - 6, 8, 4);
-
-            ctx.shadowBlur = 0;
-            ctx.restore();
-        }
-
-        // roundRect polyfill
-        if (!CanvasRenderingContext2D.prototype.roundRect) {
-            CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, radii) {
-                const r = typeof radii === 'number' ? radii : (radii || 0);
-                this.moveTo(x + r, y);
-                this.lineTo(x + w - r, y);
-                this.quadraticCurveTo(x + w, y, x + w, y + r);
-                this.lineTo(x + w, y + h - r);
-                this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-                this.lineTo(x + r, y + h);
-                this.quadraticCurveTo(x, y + h, x, y + h - r);
-                this.lineTo(x, y + r);
-                this.quadraticCurveTo(x, y, x + r, y);
-                return this;
-            };
+            enemies.length = 0;
+            gameRunning = true;
+            score = 0;
+            speed = 3;
+            nitro = 100;
+            nitroActive = false;
+            frame = 0;
+            spawnCounter = 0;
+            carGroup.position.set(0, 0, 5);
+            carGroup.rotation.y = 0;
+            scoreDisplay.textContent = '🏁 0 m';
+            nitroDisplay.textContent = '💨 NITRO';
+            nitroDisplay.style.color = '#f5a623';
+            restartBtn.style.display = 'none';
+            // Restart engine
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            startEngine();
         }
 
         // ============================================================
         // GAME LOOP
         // ============================================================
-        function gameLoop() {
+        function update() {
+            if (!gameRunning) {
+                if (engineGain) {
+                    engineGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.05);
+                }
+                return;
+            }
+
+            const currentSpeed = getSpeed();
+            score += 0.1 * (1 + (nitroActive ? 0.6 : 0));
+            scoreDisplay.textContent = `🏁 ${Math.floor(score)} m`;
+
+            // Engine sound
+            const speedFactor = Math.min(currentSpeed / maxSpeed, 1);
+            updateEngine(speedFactor);
+
+            // Nitro
+            if (nitroKey && nitro > 5 && !nitroActive) {
+                nitroActive = true;
+                playNitro();
+            }
+            if (nitroActive) {
+                nitro -= 0.5;
+                if (nitro <= 0) {
+                    nitro = 0;
+                    nitroActive = false;
+                    nitroDisplay.textContent = '⛽ EMPTY';
+                    nitroDisplay.style.color = '#f85149';
+                } else {
+                    nitroDisplay.textContent = `💨 ${Math.floor(nitro)}%`;
+                    nitroDisplay.style.color = '#f5a623';
+                }
+            } else {
+                nitro = Math.min(100, nitro + 0.08);
+                if (nitro > 20) {
+                    nitroDisplay.textContent = '💨 NITRO';
+                    nitroDisplay.style.color = '#f5a623';
+                }
+            }
+
+            // Player steering
+            const steerSpeed = 0.08;
+            let targetRot = 0;
+            if (moveLeft) targetRot = 0.4;
+            if (moveRight) targetRot = -0.4;
+            carGroup.rotation.y += (targetRot - carGroup.rotation.y) * 0.1;
+
+            // Move forward/backward
+            const forward = accelerate ? 1 : (brake ? -0.5 : 0);
+            const moveZ = forward * currentSpeed * 0.08;
+            carGroup.position.z += moveZ;
+
+            // Lateral movement based on rotation
+            const lateral = Math.sin(carGroup.rotation.y) * currentSpeed * 0.06;
+            carGroup.position.x += lateral;
+
+            // Clamp lateral position to road
+            const halfRoad = roadWidth / 2 - 0.5;
+            if (carGroup.position.x > halfRoad) carGroup.position.x = halfRoad;
+            if (carGroup.position.x < -halfRoad) carGroup.position.x = -halfRoad;
+
+            // Keep car on road (z bounds)
+            if (carGroup.position.z > 10) carGroup.position.z = 10;
+            if (carGroup.position.z < -roadLength / 2 + 2) {
+                // Game over if you fall off the back? Actually we keep moving forward, we'll scroll road later.
+                // For simplicity, we'll just wrap the road. We'll move road group instead.
+            }
+
+            // Move road and enemies relative to player
+            // Instead of moving road, we move everything else
+            // We'll shift the road group forward so player stays near origin
+            // Actually we'll move everything in the z direction relative to player.
+            // Simpler: move all enemies and road objects toward player.
+            // We'll just move enemies; road is fixed and we'll reposition player z.
+
+            // Spawn enemies
+            spawnCounter++;
+            const spawnRate = Math.max(15, spawnInterval - Math.floor(score / 30));
+            if (spawnCounter >= spawnRate) {
+                spawnCounter = 0;
+                if (enemies.length < 15) spawnEnemy();
+            }
+
+            // Move enemies toward player
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const e = enemies[i];
+                e.mesh.position.z += e.speed * 0.08;
+
+                // Collision with player
+                const playerBox = getCarBox(carGroup);
+                const enemyBox = getCarBox(e.mesh);
+                if (boxesCollide(playerBox, enemyBox)) {
+                    gameRunning = false;
+                    playCrash();
+                    stopEngine();
+                    restartBtn.style.display = 'block';
+                    return;
+                }
+
+                // Remove if passed player
+                if (e.mesh.position.z > 12) {
+                    scene.remove(e.mesh);
+                    enemies.splice(i, 1);
+                }
+            }
+
+            // Camera follow
+            const targetCamZ = carGroup.position.z - 6;
+            camera.position.z += (targetCamZ - camera.position.z) * 0.05;
+            camera.position.x += (carGroup.position.x * 0.3 - camera.position.x) * 0.05;
+            camera.lookAt(carGroup.position.x * 0.3, 0, carGroup.position.z - 2);
+
+            // Score = distance driven (roughly)
+            // We'll just increment score each frame
+        }
+
+        // ============================================================
+        // RENDER LOOP
+        // ============================================================
+        function animate() {
+            requestAnimationFrame(animate);
             update();
-            draw();
-            requestAnimationFrame(gameLoop);
+            renderer.render(scene, camera);
         }
 
         // ============================================================
         // INPUT HANDLING
         // ============================================================
-        // Keyboard
         document.addEventListener('keydown', (e) => {
-            if (!game.running) {
+            if (!gameRunning) {
                 if (e.key === ' ' || e.key === 'Space') {
                     e.preventDefault();
                     resetGame();
@@ -664,91 +635,112 @@
             }
             switch (e.key) {
                 case 'ArrowLeft':
-                    player.dx = -player.speed;
+                    moveLeft = true;
                     e.preventDefault();
                     break;
                 case 'ArrowRight':
-                    player.dx = player.speed;
+                    moveRight = true;
                     e.preventDefault();
                     break;
                 case 'ArrowUp':
-                    game.speed = Math.min(game.speed + 0.3, game.maxSpeed);
+                    accelerate = true;
                     e.preventDefault();
                     break;
                 case 'ArrowDown':
-                    game.speed = Math.max(game.speed - 0.3, 1.5);
+                    brake = true;
                     e.preventDefault();
                     break;
                 case ' ':
                 case 'Space':
+                    nitroKey = true;
                     e.preventDefault();
-                    if (game.nitro > 10 && !game.nitroActive) {
-                        game.nitroActive = true;
-                        playTurboSound();
-                    }
                     break;
             }
         });
         document.addEventListener('keyup', (e) => {
-            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-                player.dx = 0;
-                e.preventDefault();
-            }
-            if (e.key === ' ' || e.key === 'Space') {
-                // Nitro stays active until depleted
-                e.preventDefault();
+            switch (e.key) {
+                case 'ArrowLeft':
+                    moveLeft = false;
+                    e.preventDefault();
+                    break;
+                case 'ArrowRight':
+                    moveRight = false;
+                    e.preventDefault();
+                    break;
+                case 'ArrowUp':
+                    accelerate = false;
+                    e.preventDefault();
+                    break;
+                case 'ArrowDown':
+                    brake = false;
+                    e.preventDefault();
+                    break;
+                case ' ':
+                case 'Space':
+                    nitroKey = false;
+                    e.preventDefault();
+                    break;
             }
         });
 
-        // Touch / Mouse steering
+        // Touch support (simple – drag left/right to steer)
         let touchX = null;
-        canvas.addEventListener('touchstart', (e) => {
+        renderer.domElement.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            const rect = canvas.getBoundingClientRect();
             const touch = e.touches[0];
-            touchX = (touch.clientX - rect.left) / rect.width * W;
-            // Also trigger audio context
+            touchX = touch.clientX;
             initAudio();
-            startEngineSound();
+            startEngine();
         });
-        canvas.addEventListener('touchmove', (e) => {
+        renderer.domElement.addEventListener('touchmove', (e) => {
             e.preventDefault();
-            if (!game.running || touchX === null) return;
-            const rect = canvas.getBoundingClientRect();
+            if (!gameRunning || touchX === null) return;
             const touch = e.touches[0];
-            const canvasX = (touch.clientX - rect.left) / rect.width * W;
-            const center = player.x + player.w / 2;
-            const diff = canvasX - center;
-            const maxDiff = 30;
-            const clampedDiff = Math.max(-maxDiff, Math.min(maxDiff, diff));
-            player.dx = (clampedDiff / maxDiff) * player.speed * 1.2;
+            const delta = touch.clientX - touchX;
+            touchX = touch.clientX;
+            // Map to steering
+            if (delta > 5) {
+                moveRight = true;
+                moveLeft = false;
+                setTimeout(() => { moveRight = false; }, 50);
+            } else if (delta < -5) {
+                moveLeft = true;
+                moveRight = false;
+                setTimeout(() => { moveLeft = false; }, 50);
+            }
+            // Accelerate on touch
+            accelerate = true;
         });
-        canvas.addEventListener('touchend', (e) => {
+        renderer.domElement.addEventListener('touchend', (e) => {
             e.preventDefault();
-            player.dx = 0;
             touchX = null;
+            accelerate = false;
+            moveLeft = false;
+            moveRight = false;
         });
 
         // Restart button
-        document.getElementById('restartBtn').addEventListener('click', () => {
-            resetGame();
-            // ensure engine restarts
-            if (game.running) {
-                startEngineSound();
-            }
+        restartBtn.addEventListener('click', resetGame);
+
+        // ============================================================
+        // WINDOW RESIZE
+        // ============================================================
+        window.addEventListener('resize', () => {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            camera.aspect = w / h;
+            camera.updateProjectionMatrix();
+            renderer.setSize(w, h);
         });
 
         // ============================================================
-        // INIT
+        // START
         // ============================================================
         resetGame();
-        // Start engine after a tiny delay
-        setTimeout(() => {
-            if (game.running) startEngineSound();
-        }, 300);
-        gameLoop();
+        startEngine();
+        animate();
 
-        console.log('🏁 Turbo Racer loaded! Use arrow keys + Space for nitro.');
+        console.log('🏁 3D Turbo Racer loaded!');
     </script>
 </body>
 </html>
